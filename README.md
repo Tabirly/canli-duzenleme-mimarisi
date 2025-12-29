@@ -22,7 +22,7 @@ DOM Sanitization: "Self-Healing" (Kendi kendini onaran) HTML yapısı.
 
 🔗 İlgili Bağlantılar
 
-Ana Site: tr.tabirly.com
+Ana Site: https://tr.tabirly.com/
 
 Kategori: Frontend Engineering / Workflow Automation
 
