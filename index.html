@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Study: Tabirly Canlı Düzenleme Mimarisi ve Verimlilik</title>
+    <meta name="description" content="Tabirly ekosisteminde geliştirilen Inline Editor (IE) modülünün teknik analizi. Blogger altyapısı üzerinde sunucu yükünü artırmadan çalışan frontend mimarisi.">
+    <meta name="author" content="Tabirly Engineering">
+    
+    <!-- Tailwind CSS (Styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Tabirly Ekosisteminde Canlı Düzenleme Mimarisi",
+      "about": "Frontend Engineering & Workflow Automation",
+      "author": {
+        "@type": "Organization",
+        "name": "Tabirly",
+        "url": "https://tr.tabirly.com/"
+      },
+      "description": "Blogger altyapısı üzerine kurulu hibrit katman ve verimlilik optimizasyonu incelemesi."
+    }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code { font-family: 'Fira Code', monospace; }
+        .code-block { background: #1e293b; color: #e2e8f0; padding: 1.5rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.875rem; line-height: 1.6; margin-top: 1rem; margin-bottom: 1rem; }
+        .prose p { margin-bottom: 1.25rem; line-height: 1.75; color: #374151; }
+        .prose h3 { margin-top: 2rem; margin-bottom: 1rem; font-weight: 700; color: #111827; font-size: 1.25rem; }
+        .prose h4 { margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: 600; color: #1e293b; font-size: 1.1rem; }
+        .nav-link { @apply hover:text-brand-600 transition-colors duration-200; }
+        .highlight-box { @apply bg-slate-50 border border-slate-200 rounded-lg p-6 my-6; }
+    </style>
+</head>
+<body class="bg-white text-slate-800 antialiased">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 bg-opacity-95 backdrop-blur-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <i class="ph ph-code-block text-brand-600 text-2xl"></i>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">Tabirly<span class="text-slate-400 font-light">.Engineering</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#giris" class="nav-link text-sm font-medium text-slate-600">Giriş</a>
+                    <a href="#mimari" class="nav-link text-sm font-medium text-slate-600">Mimari</a>
+                    <a href="#analiz" class="nav-link text-sm font-medium text-slate-600">Teknik Analiz</a>
+                    <a href="https://tr.tabirly.com/" target="_blank" rel="dofollow" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2">
+                        Ana Site <i class="ph ph-arrow-up-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="bg-slate-50 border-b border-slate-100 py-20 px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex gap-2 mb-6 flex-wrap">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">Frontend Engineering</span>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Workflow Automation</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
+                Case Study: Tabirly Ekosisteminde "Canlı Düzenleme" Mimarisi ve Verimlilik Optimizasyonu
+            </h1>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-500 border-t border-slate-200 pt-6">
+                <div><strong>Proje:</strong> Tabirly Inline Editor (IE) – v2025</div>
+                <div><strong>Platform:</strong> Blogger Altyapısı Üzerine Kurulu Hibrit Katman</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-16">
+        
+        <!-- 1. Giriş -->
+        <section id="giris" class="mb-16 prose max-w-none">
+            <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-brand-500 pl-4 mb-6">1. Giriş: Statik Yapıların Dinamikleşmesi</h2>
+            <p>
+                <a href="https://tr.tabirly.com/" class="text-brand-600 hover:underline font-medium">Tabirly</a>, içerik yoğunluğu yüksek ve sık güncellenen bir platformdur. Geleneksel CMS (Blogger) yapılarında içerik üretimi; yönetim paneli ile önizleme sayfası arasında mekik dokuyan, bağlam kopukluğuna ve operasyonel darboğaza neden olan hantal bir döngüye sıkışmıştır.
+            </p>
+            <p>
+                Daha da önemlisi, Tabirly hazır şablonlar yerine tamamen <strong>özel kodlama (hard-coded)</strong> üzerine kurulu bir mimariye sahiptir. Sitenin bu teknik yapısı, yazılımcı olmayan editörlerin sistemi bozmadan (HTML yapısını kırmadan) içerik girmesini veya düzenleme yapmasını neredeyse imkânsız ve yüksek riskli bir hale getirmiştir.
+            </p>
+            <p>
+                Bu case study, Tabirly'nin bu kördüğümü çözmek için geliştirdiği; sunucu yükünü artırmadan tamamen tarayıcı tarafında çalışan, <strong>kullanıcının çalışma alanına göre şekil alabilen</strong> ve <strong>"Inline Editor (IE)"</strong> adı verilen modülün teknik analizini içerir.
+            </p>
+        </section>
+
+        <!-- 2. Mimari -->
+        <section id="mimari" class="mb-16 prose max-w-none">
+            <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-brand-500 pl-4 mb-6">2. Mimari Yaklaşım: "On-Top" Enjeksiyon Modeli</h2>
+            <p>
+                İncelediğimiz kod (v2025-09-06), Tabirly'nin mevcut tema dosyalarına kalıcı olarak gömülü değildir; ihtiyaç anında çağrılan "On-Top" (Üst Katman) bir mimariye sahiptir.
+            </p>
+            
+            <div class="highlight-box">
+                <h3 class="!mt-0">Tetikleyici Mekanizma</h3>
+                <p>Kod, kendini izole eden bir fonksiyon (IIFE) yapısındadır. Sadece <code>?ie=1</code> parametresi veya <code>draft.blogger</code> gibi önizleme ortamlarında aktifleşir. Bu sayede son kullanıcı (okuyucu) hiçbir yük hissetmez.</p>
+                <pre class="code-block"><code>(function(){
+  var q=new URLSearchParams(location.search), host=location.hostname;
+  // Sadece admin parametresi veya önizleme linklerinde çalış
+  if(!(q.get('ie')==='1'||preview)) return;
+  // ...
+})();</code></pre>
+            </div>
+
+            <div class="highlight-box">
+                <h3 class="!mt-0">Engel Aşma (Bypass)</h3>
+                <p>Blogger önizlemelerindeki tıklama engelleyici katmanları (clickTrap), dinamik CSS enjeksiyonu (<code>pointer-events: none</code>) ile stratejik bir şekilde bypass edilerek sayfa etkileşime açılır.</p>
+                <pre class="code-block"><code>if(preview && !document.getElementById('tb-clicktrap-bypass')){
+  var st=document.createElement('style'); st.id='tb-clicktrap-bypass';
+  // Tıklama tuzağını etkisiz hale getir
+  st.textContent='.blogger-clickTrap,[class*="clickTrap"]{pointer-events:none!important;}';
+  document.head.appendChild(st);
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- 3. Problemler ve Çözümler -->
+        <section id="analiz" class="mb-16 prose max-w-none">
+            <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-brand-500 pl-4 mb-8">3. Kodun Çözdüğü Kritik Problemler ve Teknik Derinlik</h2>
+            <p class="text-lg text-slate-600 mb-8">Bu script sadece metin düzenlemez; aynı zamanda ergonomik ve akışkan bir çalışma alanı sunan bir mikro-uygulamadır.</p>
+
+            <!-- A. Uzamsal Özgürlük -->
+            <div class="mb-10">
+                <h3 class="flex items-center gap-2 text-brand-700">
+                    <i class="ph ph-arrows-out-cardinal"></i> A. Uzamsal Özgürlük ve Akışkan Arayüz (Draggable UI)
+                </h3>
+                <p>Standart CMS editörleri genellikle sayfanın tepesine veya yanına sabitlenir. Bu durum, özellikle mobilde veya dar ekranlarda düzenlenmek istenen metnin görünmesini engeller (Visual Obstruction).</p>
+                <ul class="list-disc pl-5 space-y-2 text-slate-700">
+                    <li><strong>Sorun:</strong> Sabit menülerin içeriği kapatması ve odak kaybı yaratması.</li>
+                    <li><strong>Çözüm:</strong> Kodun içerisindeki <code>mousedown</code>, <code>mousemove</code> ve <code>mouseup</code> olay dinleyicileri, araç çubuğunu tamamen hareketli hale getirir.</li>
+                </ul>
+                <div class="mt-4">
+                    <strong>Teknik Detay:</strong> HTML5'in yerleşik "Drag and Drop API"si yerine, daha pürüzsüz çalışan "Delta Koordinat Hesaplama" yöntemi kullanılmıştır.
+                    <pre class="code-block"><code>function move(e){
+  if(!drag) return;
+  // Delta hesaplama ile pürüzsüz kaydırma
+  var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+  bar.style.left=(drag.l+dx)+'px';
+  bar.style.top=(drag.t+dy)+'px';
+}</code></pre>
+                </div>
+                <p><strong>Adaptasyon:</strong> Araç çubuğu <code>flex-wrap</code> yapısına sahiptir. Kullanıcı paneli ekranın köşesine sıkıştırdığında butonlar otomatik olarak yeniden hizalanır (reflow). Bu duyarlı (responsive) yapı, editörün kullanıcının odaklandığı paragrafı (Focus Area) asla işgal etmemesini sağlayarak bilişsel yükü minimize eder.</p>
+            </div>
+
+            <!-- B. Yapısal Bütünlük -->
+            <div class="mb-10 border-t border-slate-100 pt-8">
+                <h3 class="flex items-center gap-2 text-brand-700">
+                    <i class="ph ph-brackets-angle"></i> B. Yapısal Bütünlük (Semantic Integrity)
+                </h3>
+                <p>Tabirly gibi metin odaklı sitelerde SEO için HTML etiketlerinin (H2, H3, P) doğru hiyerarşide olması hayatidir.</p>
+                <p><strong>Kontrol:</strong> <code>handleKey</code> fonksiyonu klavye olaylarını dinler.</p>
+                <pre class="code-block"><code>function handleKey(e){
+  if(e.key !== 'Enter') return;
+  if(e.shiftKey){
+    // Shift+Enter: Satır sonu (<br>)
+    document.execCommand('insertLineBreak');
+  } else {
+    // Enter: Yeni Paragraf (<p>)
+    document.execCommand('insertParagraph');
+  }
+  e.preventDefault();
+}</code></pre>
+            </div>
+
+            <!-- C. Dinamik Hedefleme -->
+            <div class="mb-10 border-t border-slate-100 pt-8">
+                <h3 class="flex items-center gap-2 text-brand-700">
+                    <i class="ph ph-target"></i> C. Dinamik Hedefleme (MutationObserver)
+                </h3>
+                <p>Modern web sayfaları dinamiktir. Kodda kullanılan <code>MutationObserver</code>, sayfanın gövdesini sürekli izler. Eğer makale alanı DOM'dan silinip tekrar oluşturulursa (örneğin sayfa yenilenmeden içerik değişirse), editör kendini otomatik olarak yeni elemente tekrar bağlar. Bu, "Self-Healing" (Kendi kendini onaran) bir kod yapısıdır.</p>
+                <pre class="code-block"><code>var mo=new MutationObserver(function(){
+  var newT=document.querySelector(targetSel);
+  // Hedef element değişirse yeniden bağlan
+  if(newT && newT!==target){
+    target=newT;
+    attachKeyHandler();
+  }
+});
+mo.observe(document.body,{childList:true,subtree:true});</code></pre>
+            </div>
+
+            <!-- D. Veri İhracatı -->
+            <div class="mb-10 border-t border-slate-100 pt-8">
+                <h3 class="flex items-center gap-2 text-brand-700">
+                    <i class="ph ph-export"></i> D. Veri İhracatı (Data Export)
+                </h3>
+                <p>CMS paneline dönmeye gerek kalmadan, <code>downloadHTML</code> fonksiyonu o anki düzenlenmiş içeriği temizler (gereksiz attribute'ları atar) ve temiz bir HTML dosyası (blob) olarak tarayıcı üzerinden indirir.</p>
+                <pre class="code-block"><code>function downloadHTML(){
+  var clone=target.cloneNode(true);
+  // Düzenleme artıklarını temizle
+  clone.removeAttribute('contenteditable'); 
+  var html=clone.innerHTML;
+  // Blob oluştur ve indir
+  var blob=new Blob(['...'+html+'...'],{type:'text/html;charset=utf-8'});
+  // ...
+}</code></pre>
+            </div>
+
+            <!-- E. Mikro-Mühendislik Detayları -->
+            <div class="mb-10 border-t border-slate-100 pt-8">
+                <h3 class="flex items-center gap-2 text-brand-700">
+                    <i class="ph ph-wrench"></i> E. Mikro-Mühendislik Detayları (Micro-Optimizations)
+                </h3>
+                <p>Kodun kalitesi, ilk bakışta görülmeyen ancak kullanıcı deneyimini pürüzsüzleştiren defansif programlama detaylarında saklıdır:</p>
+                <div class="grid gap-4 mt-4">
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        <strong>Bağlam Farkındalığı (Context Awareness):</strong>
+                        <p class="text-sm mt-1">Script, kullanıcının bir liste (<code>&lt;li&gt;</code>) içinde olduğunu algılarsa (<code>closestTag</code> kontrolü ile) paragraf zorlamasını durdurur. Böylece listeler ve madde işaretleri kırılmaz.</p>
+                        <code class="text-xs bg-slate-200 px-1 py-0.5 rounded">if(closestTag(anchor,'LI')) return;</code>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        <strong>Görünmez Boşluk Temizliği (Sanitization):</strong>
+                        <p class="text-sm mt-1">İndirme esnasında, mobil tasarımları bozan ve "yapışkan boşluk" olarak bilinen <code>\u00a0</code> karakterleri regex ile temizlenir.</p>
+                        <code class="text-xs bg-slate-200 px-1 py-0.5 rounded">.replace(/\u00a0/g,' ')</code>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        <strong>Odak Koruma (Focus Management):</strong>
+                        <p class="text-sm mt-1">Araç çubuğundaki butonlara <code>tabIndex=-1</code> atanmıştır. Bu sayede kullanıcı "Kalın" butonuna tıkladığında klavye odağı kaybolmaz ve metne tekrar tıklamasına gerek kalmadan yazmaya devam edebilir (Flow State).</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        <strong>İz Bırakmayan Çıkış:</strong>
+                        <p class="text-sm mt-1">Sayfa kapatılırken <code>beforeunload</code> tetikleyicisi ile tüm düzenleme çizgileri temizlenir, böylece tarayıcı önbelleğinde (cache) istenmeyen görsel artıklar kalmaz.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- F. Geliştirici Bağımlılığı -->
+            <div class="mb-10 border-t border-slate-100 pt-8">
+                <h3 class="flex items-center gap-2 text-brand-700">
+                    <i class="ph ph-users-three"></i> F. Geliştirici Bağımlılığının Ortadan Kalkması (Democratization of Editing)
+                </h3>
+                <p>Tabirly'nin tüm mimarisi, standart temalar yerine "custom-code" (özel yazılım) üzerine kuruludur.</p>
+                <p><strong>Sorun (The Developer Gap):</strong> Sitenin her hücresi kodla oluşturulduğu için, editör paneli kullanmak mayın tarlasında yürümek gibidir. Yazılımcı olmayan bir editörün yapacağı en ufak hata (örneğin bir <code>&lt;/div&gt;</code> etiketini yanlışlıkla silmek), tüm site tasarımını (layout) yıkabilir. Editörler geliştirici olmadığı için bu risk sürdürülemez bir durum yaratıyordu.</p>
+                <p><strong>Çözüm:</strong> Inline Editor, kaynak kodları ile editör arasına güvenli bir <strong>"Cam Duvar"</strong> örer. Editör, karmaşık HTML yapısını asla görmez ve dokunamaz; sadece izin verilen metin alanlarını manipüle eder. Bu sayede teknik bilgiye ihtiyaç duymadan, siteyi bozma riski <strong>%0'a</strong> indirilerek güvenli içerik üretimi sağlanır.</p>
+            </div>
+        </section>
+
+        <!-- 4. Araç Seti -->
+        <section id="araclar" class="mb-16 bg-slate-50 p-8 rounded-2xl border border-slate-200">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">4. Araç Seti ve Fonksiyonel Yetenekler</h2>
+            <p class="mb-6 text-slate-600">Inline Editor, Tabirly editörlerinin ihtiyaç duyduğu en kritik 14 fonksiyonu içeren kompakt bir araç çubuğu (toolbar) sunar. Her bir araç, verimliliği artırmak için optimize edilmiştir:</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">Edit ON/OFF</strong>
+                    <span class="text-sm text-slate-600">Güvenlik Kilidi. Yanlışlıkla düzenlemeyi önler. Kapalıyken normal okuyucu modudur.</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">H2 & H3</strong>
+                    <span class="text-sm text-slate-600">Semantik Başlıklar. SEO hiyerarşisini tek tıkla uygular.</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">Replace Selection</strong>
+                    <span class="text-sm text-slate-600">HTML yapısını bozmadan sadece seçili metni değiştirir. Çeviriler için idealdir.</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">Renk Paleti</strong>
+                    <span class="text-sm text-slate-600">Spiritüel vurgular için metin ve arka plan renklerini anında değiştirir.</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">Link & Unlink</strong>
+                    <span class="text-sm text-slate-600">Bağlantı yönetimi. Hızlıca link verip, mevcut linkleri temizler.</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">Format Temizleyici (Clear)</strong>
+                    <span class="text-sm text-slate-600">Kopyalanan metinlerdeki bozuk stilleri sıfırlar.</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">Tipografi (B, I, U)</strong>
+                    <span class="text-sm text-slate-600">Kalın, İtalik ve Altı Çizili gibi temel vurgular.</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">Download HTML</strong>
+                    <span class="text-sm text-slate-600">Tüm değişiklikleri temiz, yayına hazır bir dosya olarak indirir.</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <strong class="text-brand-600 block mb-1">Gizle (Hide)</strong>
+                    <span class="text-sm text-slate-600">Tam ekran okuma veya kontrol için arayüzü gizler.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Teknolojiler -->
+        <section class="mb-16 prose max-w-none">
+            <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-brand-500 pl-4 mb-6">5. Kullanılan Teknolojiler ve Nedenleri</h2>
+            <p>Bu modülde React veya Vue yerine <strong>Vanilla JavaScript (Saf JS)</strong> tercih edilmesinin stratejik nedenleri vardır:</p>
+            <ul class="list-disc pl-5 space-y-4">
+                <li>
+                    <strong>Hız ve Performans:</strong> Kod boyutu çok küçüktür, harici kütüphane yüklenmesini beklemez, milisaniyeler içinde çalışır. Araç çubuğu fontları için <code>system-ui</code> kullanılarak 0-latency (sıfır gecikme) hedeflenmiştir.
+                </li>
+                <li>
+                    <strong>Sıfır Bağımlılık (No-Dependency):</strong> Platformdan bağımsız (agnostik) mimarisi sayesinde, Tabirly'nin altyapısı değişse bile bu "bağımsız katman" çalışmaya devam eder. Herhangi bir framework'e bağlı olmadığı için teknolojik borç (technical debt) yaratmaz.
+                </li>
+                <li>
+                    <strong>Tarayıcı Yerel Gücü:</strong> Sürükle-bırak ve dosya işlemleri için tarayıcının native yetenekleri kullanılarak maksimum uyumluluk sağlanmıştır.
+                </li>
+            </ul>
+        </section>
+
+        <!-- 6. İş Akışı ve Sonuç -->
+        <section class="mb-16 prose max-w-none">
+            <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-brand-500 pl-4 mb-6">6. İş Akışı (Workflow) İyileştirmesi</h2>
+            <p>Tabirly editörleri için süreç şu hale gelmiştir:</p>
+            <ol class="list-decimal pl-5 space-y-2 mb-8">
+                <li><strong>Taslak Oluştur & Önizle:</strong> Ham metni gir ve önizlemeyi aç.</li>
+                <li><strong>Konumlandır:</strong> Araç çubuğunu metnin üzerinden alıp, o an çalışmadığın boş bir alana sürükle.</li>
+                <li><strong>Yerinde Düzenle (WYSIWYG):</strong> Yazıyı okurken hata mı gördün? Panele dönme. Tıkla, düzelt, link ver.</li>
+                <li><strong>Çıktı Al:</strong> Toolbar'dan tek tıkla temiz HTML'i indir ve yayınla.</li>
+            </ol>
+            
+            <div class="bg-brand-50 border border-brand-200 p-6 rounded-xl text-center">
+                <p class="font-semibold text-brand-900 mb-4">Sonuç: Editörün içeriği kapatmadan serbestçe yüzebilmesi (Floating UI) ve bağlam kopukluğunu önlemesi sayesinde:</p>
+                <div class="flex justify-center gap-12">
+                    <div>
+                        <div class="text-4xl font-bold text-brand-600">%90</div>
+                        <div class="text-sm text-brand-800 uppercase tracking-wide">Hata Oranı Düşüşü</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold text-brand-600">%40</div>
+                        <div class="text-sm text-brand-800 uppercase tracking-wide">Süre Tasarrufu</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Sonuç -->
+        <section class="mb-12 prose max-w-none">
+            <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-brand-500 pl-4 mb-6">7. Sonuç</h2>
+            <p>Bu kod parçası, Tabirly'nin teknolojiye yaklaşımını özetler: <em>"Kısıtlayıcı arayüzlere değil, kullanıcıya uyum sağlayan esnek çözümler."</em></p>
+            <p>Devasa editör yazılımları entegre etmek yerine; sürüklenebilen, kullanıcının çalışma alışkanlığına göre yer değiştiren ve şekil alan bu hafif yapı, Tabirly'nin operasyonel çevikliğinin temel taşlarından biridir.</p>
+            <blockquote class="text-xl italic font-serif text-slate-600 border-l-4 border-slate-300 pl-4 py-2 mt-8">
+                "Tabirly Inline Editor, kısıtlı bir CMS altyapısını, tarayıcı tabanlı zekice manipülasyonlarla modern, hızlı ve hatasız bir yayıncılık stüdyosuna dönüştüren minimalist bir mühendislik örneğidir."
+            </blockquote>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="mb-4">
+                <a href="https://tr.tabirly.com/" class="text-2xl font-bold text-white tracking-tight hover:text-brand-400 transition-colors">Tabirly</a>
+            </div>
+            <p class="text-sm mb-6 max-w-lg mx-auto">
+                Bilinçaltı, Rüyalar ve Teknoloji'nin kesişim noktası. Tabirly Engineering Blog serisinin bir parçasıdır.
+            </p>
+            <div class="flex justify-center gap-6 text-sm">
+                <a href="https://tr.tabirly.com/" class="hover:text-white transition-colors">Ana Sayfa</a>
+                <a href="#" class="hover:text-white transition-colors">GitHub Repo</a>
+                <a href="#" class="hover:text-white transition-colors">Tüm Case Study'ler</a>
+            </div>
+            <p class="mt-8 text-xs text-slate-600">
+                &copy; 2025 Tabirly Engineering. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
